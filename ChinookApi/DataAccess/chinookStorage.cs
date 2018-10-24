@@ -12,6 +12,37 @@ namespace ChinookApi.DataAccess
 
     private const string conString = "Server=(local);Database=Chinook;Trusted_Connection=True;";
 
+    public List<InvoiceAll> GetAllInvoices()
+    {
+      using (var connection = new SqlConnection(conString))
+      {
+        connection.Open();
+        var command = connection.CreateCommand();
+        command.CommandText = @"select Customer_Name = c.FirstName + ' ' + c.LastName, i.Total, c.Country, Employee_Name = e.FirstName + ' ' + e.LastName
+                                from Invoice as i, Customer as c, Employee as e
+                                where i.CustomerId = c.CustomerId
+                                and e.EmployeeId = c.SupportRepId";
+
+        var reader = command.ExecuteReader();
+        var invoiceList = new List<InvoiceAll>();
+
+        while (reader.Read())
+        {
+          var invoice = new InvoiceAll()
+          {
+            Customer_Name = reader["Customer_Name"].ToString(),
+            Total = (decimal)reader["Total"],
+            Country = reader["Country"].ToString(),
+            Employee_Name = reader["Employee_Name"].ToString(),
+          };
+
+          invoiceList.Add(invoice);
+        }
+
+        return invoiceList;
+      }
+    }
+
     public List<Invoice> GetbyId(int id)
     {
       using (var connection = new SqlConnection(conString))
