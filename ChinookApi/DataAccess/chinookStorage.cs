@@ -88,21 +88,10 @@ namespace ChinookApi.DataAccess
       using (var connection = new SqlConnection(conString))
       {
         connection.Open();
-        var command = connection.CreateCommand();
-        command.CommandText = @"INSERT INTO [dbo].[Invoice]([CustomerId],[InvoiceDate],[BillingAddress]
-                                ,[BillingCity],[BillingState],[BillingCountry],[BillingPostalCode],[Total])
-                                Values (@CustomerId,@InvoiceDate,@BillingAddress,@BillingCity,@BillingState
-                                ,@BillingCountry,@BillingPostalCode,@Total)";
-        command.Parameters.AddWithValue("@CustomerId", invoice.CustomerId);
-        command.Parameters.AddWithValue("@InvoiceDate", invoice.InvoiceDate);
-        command.Parameters.AddWithValue("@BillingAddress", invoice.BillingAddress);
-        command.Parameters.AddWithValue("@BillingCity", invoice.BillingCity);
-        command.Parameters.AddWithValue("@BillingState", invoice.BillingState);
-        command.Parameters.AddWithValue("@BillingCountry", invoice.BillingCountry);
-        command.Parameters.AddWithValue("@BillingPostalCode", invoice.BillingPostalCode);
-        command.Parameters.AddWithValue("@Total", invoice.Total);
 
-        var result = command.ExecuteNonQuery();
+        var result = connection.Execute(@"INSERT INTO [dbo].[Invoice]([CustomerId],[InvoiceDate],[BillingAddress],[BillingCity],[BillingState],[BillingCountry],[BillingPostalCode],[Total])
+                             Values (@CustomerId,@InvoiceDate,@BillingAddress,@BillingCity,@BillingState,@BillingCountry,@BillingPostalCode,@Total)", invoice);
+       
         return result == 1;
       }
     }
@@ -112,15 +101,19 @@ namespace ChinookApi.DataAccess
       using (var connection = new SqlConnection(conString))
       {
         connection.Open();
-        var command = connection.CreateCommand();
-        command.CommandText = @"UPDATE [dbo].[Employee]
-                                  SET[LastName] = @LastName, [FirstName] = @FirstName
-                                  WHERE Employee.EmployeeId = @id";
-        command.Parameters.AddWithValue("@LastName", employee.LastName);
-        command.Parameters.AddWithValue("@FirstName", employee.FirstName);
-        command.Parameters.AddWithValue("@id", id);
 
-        var result = command.ExecuteNonQuery();
+        var result = connection.Execute(@"UPDATE [dbo].[Employee]
+                                  SET[LastName] = @LastName, [FirstName] = @FirstName
+                                  WHERE Employee.EmployeeId = @id", new { id, LastName = employee.LastName, FirstName = employee.FirstName});
+        //var command = connection.CreateCommand();
+        //command.CommandText = @"UPDATE [dbo].[Employee]
+        //                          SET[LastName] = @LastName, [FirstName] = @FirstName
+        //                          WHERE Employee.EmployeeId = @id";
+        //command.Parameters.AddWithValue("@LastName", employee.LastName);
+        //command.Parameters.AddWithValue("@FirstName", employee.FirstName);
+        //command.Parameters.AddWithValue("@id", id);
+
+        //var result = command.ExecuteNonQuery();
         return result == 1;
       }
     }
