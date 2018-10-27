@@ -19,34 +19,39 @@ namespace ChinookApi.DataAccess
       conString = config.GetSection("ConnectionString").Value;
     }
 
-    public List<InvoiceAll> GetAllInvoices()
+    public IEnumerable<InvoiceAll> GetAllInvoices()
     {
       using (var connection = new SqlConnection(conString))
       {
         connection.Open();
-        var command = connection.CreateCommand();
-        command.CommandText = @"select Customer_Name = c.FirstName + ' ' + c.LastName, i.Total, c.Country, Employee_Name = e.FirstName + ' ' + e.LastName
+
+        var result = connection.Query<InvoiceAll>(@"select Customer_Name = c.FirstName + ' ' + c.LastName, i.Total, c.Country, Employee_Name = e.FirstName + ' ' + e.LastName
                                 from Invoice as i, Customer as c, Employee as e
                                 where i.CustomerId = c.CustomerId
-                                and e.EmployeeId = c.SupportRepId";
+                                and e.EmployeeId = c.SupportRepId");
+        //var command = connection.CreateCommand();
+        //command.CommandText = @"select Customer_Name = c.FirstName + ' ' + c.LastName, i.Total, c.Country, Employee_Name = e.FirstName + ' ' + e.LastName
+        //                        from Invoice as i, Customer as c, Employee as e
+        //                        where i.CustomerId = c.CustomerId
+        //                        and e.EmployeeId = c.SupportRepId";
 
-        var reader = command.ExecuteReader();
-        var invoiceList = new List<InvoiceAll>();
+        //var reader = command.ExecuteReader();
+        //var invoiceList = new List<InvoiceAll>();
 
-        while (reader.Read())
-        {
-          var invoice = new InvoiceAll()
-          {
-            Customer_Name = reader["Customer_Name"].ToString(),
-            Total = (decimal)reader["Total"],
-            Country = reader["Country"].ToString(),
-            Employee_Name = reader["Employee_Name"].ToString(),
-          };
+        //while (reader.Read())
+        //{
+        //  var invoice = new InvoiceAll()
+        //  {
+        //    Customer_Name = reader["Customer_Name"].ToString(),
+        //    Total = (decimal)reader["Total"],
+        //    Country = reader["Country"].ToString(),
+        //    Employee_Name = reader["Employee_Name"].ToString(),
+        //  };
 
-          invoiceList.Add(invoice);
-        }
+        //  invoiceList.Add(invoice);
+        //}
 
-        return invoiceList;
+        return result;
       }
     }
 
@@ -105,15 +110,6 @@ namespace ChinookApi.DataAccess
         var result = connection.Execute(@"UPDATE [dbo].[Employee]
                                   SET[LastName] = @LastName, [FirstName] = @FirstName
                                   WHERE Employee.EmployeeId = @id", new { id, LastName = employee.LastName, FirstName = employee.FirstName});
-        //var command = connection.CreateCommand();
-        //command.CommandText = @"UPDATE [dbo].[Employee]
-        //                          SET[LastName] = @LastName, [FirstName] = @FirstName
-        //                          WHERE Employee.EmployeeId = @id";
-        //command.Parameters.AddWithValue("@LastName", employee.LastName);
-        //command.Parameters.AddWithValue("@FirstName", employee.FirstName);
-        //command.Parameters.AddWithValue("@id", id);
-
-        //var result = command.ExecuteNonQuery();
         return result == 1;
       }
     }
