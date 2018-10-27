@@ -120,7 +120,24 @@ namespace ChinookApi.DataAccess
 
         var result = command.ExecuteNonQuery();
         return result == 1;
+      }
+    }
 
+    public bool UpdateEmployee(Employee employee, int id)
+    {
+      using (var connection = new SqlConnection(conString))
+      {
+        connection.Open();
+        var command = connection.CreateCommand();
+        command.CommandText = @"UPDATE [dbo].[Employee]
+                                  SET[LastName] = @LastName, [FirstName] = @FirstName
+                                  WHERE Employee.EmployeeId = @id";
+        command.Parameters.AddWithValue("@LastName", employee.LastName);
+        command.Parameters.AddWithValue("@FirstName", employee.FirstName);
+        command.Parameters.AddWithValue("@id", id);
+
+        var result = command.ExecuteNonQuery();
+        return result == 1;
       }
     }
 
