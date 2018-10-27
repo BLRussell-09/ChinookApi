@@ -43,5 +43,11 @@ namespace ChinookApi.Controllers
         {
           _storage.AddInvoice(invoice);
         }
+
+        [HttpPut("{id}")]
+        public void UpdateAnEmployee(Employee employee, int id)
+        {
+           _storage.UpdateEmployee(employee, id);
+        }
     }
 }
