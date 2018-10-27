@@ -83,5 +83,21 @@ namespace ChinookApi.DataAccess
 
     }
 
+    public object CountInvoiceLine(int id)
+    {
+      using (var connection = new SqlConnection(conString))
+      {
+        connection.Open();
+        var command = connection.CreateCommand();
+        command.CommandText = @"Select count(InvoiceLineId) as Line_Items
+                                from InvoiceLine join Invoice
+	                              on Invoice.InvoiceId = InvoiceLine.InvoiceId and Invoice.InvoiceId = @id";
+        command.Parameters.AddWithValue("@id", id);
+
+        var result = command.ExecuteScalar();
+        return result;
+      }
+    }
+
   }
 }

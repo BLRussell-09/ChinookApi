@@ -18,5 +18,6 @@ namespace ChinookApi.Models
     public decimal Total {get; set;}
     public string Agent_Name { get; set; }
     public string Customer_Name { get; set; }
+    public int CustomerId { get; set; }
   }
 }
