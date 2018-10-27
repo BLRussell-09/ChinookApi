@@ -6,6 +6,7 @@ using ChinookApi.DataAccess;
 using ChinookApi.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 
 namespace ChinookApi.Controllers
 {
@@ -15,9 +16,9 @@ namespace ChinookApi.Controllers
     {
         private readonly ChinookStorage _storage;
 
-        public ChinookController()
+        public ChinookController(ChinookStorage config)
         {
-            _storage = new ChinookStorage();
+            _storage = config;
         }
 
         [HttpGet("{id}")]

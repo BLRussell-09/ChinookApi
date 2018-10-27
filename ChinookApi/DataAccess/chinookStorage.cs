@@ -1,4 +1,6 @@
 ﻿using ChinookApi.Models;
+using Dapper;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -10,74 +12,63 @@ namespace ChinookApi.DataAccess
   public class ChinookStorage
   {
 
-    private const string conString = "Server=(local);Database=Chinook;Trusted_Connection=True;";
+    private readonly string conString;
 
-    public List<InvoiceAll> GetAllInvoices()
+    public ChinookStorage(IConfiguration config)
+    {
+      conString = config.GetSection("ConnectionString").Value;
+    }
+
+    public IEnumerable<InvoiceAll> GetAllInvoices()
     {
       using (var connection = new SqlConnection(conString))
       {
         connection.Open();
-        var command = connection.CreateCommand();
-        command.CommandText = @"select Customer_Name = c.FirstName + ' ' + c.LastName, i.Total, c.Country, Employee_Name = e.FirstName + ' ' + e.LastName
+
+        var result = connection.Query<InvoiceAll>(@"select Customer_Name = c.FirstName + ' ' + c.LastName, i.Total, c.Country, Employee_Name = e.FirstName + ' ' + e.LastName
                                 from Invoice as i, Customer as c, Employee as e
                                 where i.CustomerId = c.CustomerId
-                                and e.EmployeeId = c.SupportRepId";
+                                and e.EmployeeId = c.SupportRepId");
+        //var command = connection.CreateCommand();
+        //command.CommandText = @"select Customer_Name = c.FirstName + ' ' + c.LastName, i.Total, c.Country, Employee_Name = e.FirstName + ' ' + e.LastName
+        //                        from Invoice as i, Customer as c, Employee as e
+        //                        where i.CustomerId = c.CustomerId
+        //                        and e.EmployeeId = c.SupportRepId";
 
-        var reader = command.ExecuteReader();
-        var invoiceList = new List<InvoiceAll>();
+        //var reader = command.ExecuteReader();
+        //var invoiceList = new List<InvoiceAll>();
 
-        while (reader.Read())
-        {
-          var invoice = new InvoiceAll()
-          {
-            Customer_Name = reader["Customer_Name"].ToString(),
-            Total = (decimal)reader["Total"],
-            Country = reader["Country"].ToString(),
-            Employee_Name = reader["Employee_Name"].ToString(),
-          };
+        //while (reader.Read())
+        //{
+        //  var invoice = new InvoiceAll()
+        //  {
+        //    Customer_Name = reader["Customer_Name"].ToString(),
+        //    Total = (decimal)reader["Total"],
+        //    Country = reader["Country"].ToString(),
+        //    Employee_Name = reader["Employee_Name"].ToString(),
+        //  };
 
-          invoiceList.Add(invoice);
-        }
+        //  invoiceList.Add(invoice);
+        //}
 
-        return invoiceList;
+        return result;
       }
     }
 
-    public List<Invoice> GetbyId(int id)
+    public IEnumerable<Invoice> GetbyId(int id)
     {
       using (var connection = new SqlConnection(conString))
       {
         connection.Open();
-        var command = connection.CreateCommand();
-        command.CommandText = @"select Agent_Name = e.FirstName + ' ' + e.LastName, Customer_Name = c.FirstName + ' ' + c.LastName, *
+
+        var result = connection.Query<Invoice>(@"select Agent_Name = e.FirstName + ' ' + e.LastName, Customer_Name = c.FirstName + ' ' + c.LastName, *
                                 from Invoice as i, Customer as c, Employee as e
                                 where i.CustomerId = c.CustomerId
                                 and e.EmployeeId = c.SupportRepId
                                 and c.SupportRepId = @id
-                                order by EmployeeId";
+                                order by EmployeeId", new {id = id });
 
-        command.Parameters.AddWithValue("@id", id);
-
-        var reader = command.ExecuteReader();
-        var invoiceHolder = new List<Invoice>();
-        while (reader.Read())
-        {
-          var invoice = new Invoice()
-          {
-            Id = (int)reader["InvoiceId"],
-            BillingAddress = reader["BillingAddress"].ToString(),
-            BillingCity = reader["BillingCity"].ToString(),
-            BillingCountry = reader["BillingCountry"].ToString(),
-            BillingPostalCode = reader["BillingPostalCode"].ToString(),
-            BillingState = reader["BillingState"].ToString(),
-            InvoiceDate = DateTime.Parse(reader["InvoiceDate"].ToString()),
-            Agent_Name = reader["Agent_Name"].ToString(),
-            Customer_Name = reader["Customer_Name"].ToString(),
-            Total = (decimal)reader["Total"],
-          };
-          invoiceHolder.Add(invoice);
-        }
-        return invoiceHolder;
+        return result;
 
       };
 
@@ -88,13 +79,11 @@ namespace ChinookApi.DataAccess
       using (var connection = new SqlConnection(conString))
       {
         connection.Open();
-        var command = connection.CreateCommand();
-        command.CommandText = @"Select count(InvoiceLineId) as Line_Items
+        
+        var result = connection.QueryFirst<object>(@"Select count(InvoiceLineId) as Line_Items
                                 from InvoiceLine join Invoice
-	                              on Invoice.InvoiceId = InvoiceLine.InvoiceId and Invoice.InvoiceId = @id";
-        command.Parameters.AddWithValue("@id", id);
+	                              on Invoice.InvoiceId = InvoiceLine.InvoiceId and Invoice.InvoiceId = @id", new {id = id});
 
-        var result = command.ExecuteScalar();
         return result;
       }
     }
@@ -104,21 +93,10 @@ namespace ChinookApi.DataAccess
       using (var connection = new SqlConnection(conString))
       {
         connection.Open();
-        var command = connection.CreateCommand();
-        command.CommandText = @"INSERT INTO [dbo].[Invoice]([CustomerId],[InvoiceDate],[BillingAddress]
-                                ,[BillingCity],[BillingState],[BillingCountry],[BillingPostalCode],[Total])
-                                Values (@CustomerId,@InvoiceDate,@BillingAddress,@BillingCity,@BillingState
-                                ,@BillingCountry,@BillingPostalCode,@Total)";
-        command.Parameters.AddWithValue("@CustomerId", invoice.CustomerId);
-        command.Parameters.AddWithValue("@InvoiceDate", invoice.InvoiceDate);
-        command.Parameters.AddWithValue("@BillingAddress", invoice.BillingAddress);
-        command.Parameters.AddWithValue("@BillingCity", invoice.BillingCity);
-        command.Parameters.AddWithValue("@BillingState", invoice.BillingState);
-        command.Parameters.AddWithValue("@BillingCountry", invoice.BillingCountry);
-        command.Parameters.AddWithValue("@BillingPostalCode", invoice.BillingPostalCode);
-        command.Parameters.AddWithValue("@Total", invoice.Total);
 
-        var result = command.ExecuteNonQuery();
+        var result = connection.Execute(@"INSERT INTO [dbo].[Invoice]([CustomerId],[InvoiceDate],[BillingAddress],[BillingCity],[BillingState],[BillingCountry],[BillingPostalCode],[Total])
+                             Values (@CustomerId,@InvoiceDate,@BillingAddress,@BillingCity,@BillingState,@BillingCountry,@BillingPostalCode,@Total)", invoice);
+       
         return result == 1;
       }
     }
@@ -128,15 +106,10 @@ namespace ChinookApi.DataAccess
       using (var connection = new SqlConnection(conString))
       {
         connection.Open();
-        var command = connection.CreateCommand();
-        command.CommandText = @"UPDATE [dbo].[Employee]
-                                  SET[LastName] = @LastName, [FirstName] = @FirstName
-                                  WHERE Employee.EmployeeId = @id";
-        command.Parameters.AddWithValue("@LastName", employee.LastName);
-        command.Parameters.AddWithValue("@FirstName", employee.FirstName);
-        command.Parameters.AddWithValue("@id", id);
 
-        var result = command.ExecuteNonQuery();
+        var result = connection.Execute(@"UPDATE [dbo].[Employee]
+                                  SET[LastName] = @LastName, [FirstName] = @FirstName
+                                  WHERE Employee.EmployeeId = @id", new { id, LastName = employee.LastName, FirstName = employee.FirstName});
         return result == 1;
       }
     }
