@@ -63,37 +63,6 @@ namespace ChinookApi.DataAccess
                                 and c.SupportRepId = @id
                                 order by EmployeeId", new {id = id });
 
-
-
-        //var command = connection.CreateCommand();
-        //command.CommandText = @"select Agent_Name = e.FirstName + ' ' + e.LastName, Customer_Name = c.FirstName + ' ' + c.LastName, *
-        //                        from Invoice as i, Customer as c, Employee as e
-        //                        where i.CustomerId = c.CustomerId
-        //                        and e.EmployeeId = c.SupportRepId
-        //                        and c.SupportRepId = @id
-        //                        order by EmployeeId";
-
-        //command.Parameters.AddWithValue("@id", id);
-
-        //var reader = command.ExecuteReader();
-        //var invoiceHolder = new List<Invoice>();
-        //while (reader.Read())
-        //{
-        //  var invoice = new Invoice()
-        //  {
-        //    Id = (int)reader["InvoiceId"],
-        //    BillingAddress = reader["BillingAddress"].ToString(),
-        //    BillingCity = reader["BillingCity"].ToString(),
-        //    BillingCountry = reader["BillingCountry"].ToString(),
-        //    BillingPostalCode = reader["BillingPostalCode"].ToString(),
-        //    BillingState = reader["BillingState"].ToString(),
-        //    InvoiceDate = DateTime.Parse(reader["InvoiceDate"].ToString()),
-        //    Agent_Name = reader["Agent_Name"].ToString(),
-        //    Customer_Name = reader["Customer_Name"].ToString(),
-        //    Total = (decimal)reader["Total"],
-        //  };
-        //  invoiceHolder.Add(invoice);
-        //}
         return result;
 
       };
@@ -105,13 +74,11 @@ namespace ChinookApi.DataAccess
       using (var connection = new SqlConnection(conString))
       {
         connection.Open();
-        var command = connection.CreateCommand();
-        command.CommandText = @"Select count(InvoiceLineId) as Line_Items
+        
+        var result = connection.QueryFirst<object>(@"Select count(InvoiceLineId) as Line_Items
                                 from InvoiceLine join Invoice
-	                              on Invoice.InvoiceId = InvoiceLine.InvoiceId and Invoice.InvoiceId = @id";
-        command.Parameters.AddWithValue("@id", id);
+	                              on Invoice.InvoiceId = InvoiceLine.InvoiceId and Invoice.InvoiceId = @id", new {id = id});
 
-        var result = command.ExecuteScalar();
         return result;
       }
     }
