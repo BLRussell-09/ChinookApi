@@ -31,5 +31,11 @@ namespace ChinookApi.Controllers
           return Ok(_storage.GetAllInvoices());
         }
 
+        [HttpGet("invoice/{id}/count")]
+        public IActionResult GetCount(int id)
+        {
+          return Ok(_storage.CountInvoiceLine(id));
+        }
+
     }
 }
