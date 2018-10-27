@@ -99,5 +99,30 @@ namespace ChinookApi.DataAccess
       }
     }
 
+    public bool AddInvoice(Invoice invoice)
+    {
+      using (var connection = new SqlConnection(conString))
+      {
+        connection.Open();
+        var command = connection.CreateCommand();
+        command.CommandText = @"INSERT INTO [dbo].[Invoice]([CustomerId],[InvoiceDate],[BillingAddress]
+                                ,[BillingCity],[BillingState],[BillingCountry],[BillingPostalCode],[Total])
+                                Values (@CustomerId,@InvoiceDate,@BillingAddress,@BillingCity,@BillingState
+                                ,@BillingCountry,@BillingPostalCode,@Total)";
+        command.Parameters.AddWithValue("@CustomerId", invoice.CustomerId);
+        command.Parameters.AddWithValue("@InvoiceDate", invoice.InvoiceDate);
+        command.Parameters.AddWithValue("@BillingAddress", invoice.BillingAddress);
+        command.Parameters.AddWithValue("@BillingCity", invoice.BillingCity);
+        command.Parameters.AddWithValue("@BillingState", invoice.BillingState);
+        command.Parameters.AddWithValue("@BillingCountry", invoice.BillingCountry);
+        command.Parameters.AddWithValue("@BillingPostalCode", invoice.BillingPostalCode);
+        command.Parameters.AddWithValue("@Total", invoice.Total);
+
+        var result = command.ExecuteNonQuery();
+        return result == 1;
+
+      }
+    }
+
   }
 }
